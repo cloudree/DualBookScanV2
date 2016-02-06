@@ -12,21 +12,28 @@ namespace DualBookScanV2
 {
     public partial class dlgNew : Form
     {
+        public String FileName;
+        public bool isReverse;
+
         public dlgNew()
         {
+            FileName = "";
+            isReverse = false;
             InitializeComponent();
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            if( dlgFolderBrowser.ShowDialog() == DialogResult.OK )
+            if( dlgSaveFile.ShowDialog() == DialogResult.OK )
             {
-                ebWorkingFolder.Text = dlgFolderBrowser.SelectedPath;
+                ebFileName.Text = dlgSaveFile.FileName;
             }
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            FileName = ebFileName.Text;
+            isReverse = chkReversePaging.Checked;
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

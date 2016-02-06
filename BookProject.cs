@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,14 +10,24 @@ namespace DualBookScanV2
 {
     class BookProject
     {
-        public String m_stWorkingFolder;
-        public String m_stBookName;
-        public bool m_bReverse;
-
+        private String m_stBookName;
+        private bool m_bReversed;
         private bool m_bDirty;
-        public bool IsDirty
+        private ArrayList m_stImageFileNames;
+
+        public String BookName
         {
-            get { return m_bDirty; }
+            get { return m_stBookName.Length == 0 ? "(Noname)" : m_stBookName; }
+        }
+
+        public bool Reversed
+        {
+            get { return m_bReversed; }
+        }
+
+        public ArrayList ImageFileNames
+        {
+            get { return m_stImageFileNames; }
         }
 
         public BookProject()
@@ -27,47 +38,77 @@ namespace DualBookScanV2
         public void Init()
         {
             m_bDirty = false;
-            m_stWorkingFolder = "";
             m_stBookName = "";
-            m_bReverse = false;
+            m_bReversed = false;
+            m_stImageFileNames = new ArrayList();
         }
-
-        public void CheckSave()
+        
+        public bool QuerySave()
         {
             if (m_bDirty)
             {
-                if (MessageBox.Show("Save It?", "Warning", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                // return false when cancel
+                DialogResult ret = MessageBox.Show("The book project is modified, Save It?", "Warning", MessageBoxButtons.YesNoCancel);
+                switch (ret)
                 {
-                    Save();
+                    case DialogResult.Yes:
+                        Save();
+                        break;
+                    case DialogResult.No:
+                        // don't save
+                        break;
+                    case DialogResult.Cancel:
+                        return false;
                 }
             }
+            return true;
         }
 
-        public void New(String stWorkingFolder, String stBookName)
-        {
-            CheckSave();
-            
-            m_stWorkingFolder = stWorkingFolder;
+        public void New(String stBookName, bool bReversed)
+        {   
             m_stBookName = stBookName;
+            m_bReversed = bReversed;
+            m_bDirty = true;
+            m_stImageFileNames = new ArrayList();
+        }
+
+        public void Close()
+        {
+            m_stBookName = "";
+            m_bReversed = false;
             m_bDirty = false;
         }
 
-        public void Load(String stWorkingFolder, String stBookName)
+        public void Load(String stBookName)
         {
-            CheckSave();
-
             try
             {
-                String fileName = String.Format("{0}\\{1}.book", m_stWorkingFolder, m_stBookName);
-                String text = System.IO.File.ReadAllText(fileName);
-
-                m_stWorkingFolder = stWorkingFolder;
                 m_stBookName = stBookName;
-                /* string myString = "10, 12";
-                string[] stringValues = myString.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                int a = Int32.Parse(stringValues[0]);
-                int b = Int32.Parse(stringValues[1]); */
-                m_bReverse = (int.Parse(text) == 0) ? false : true;
+                String text = System.IO.File.ReadAllText(stBookName);
+
+                /* text = "0\n"
+                "C:\\MSX\\Labels\\octo_label.png\n"
+                "C:\\MSX\\Labels\\op4 sound card label copy.png\n"
+                };";
+                
+                string[] items = text.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                int count = 0;
+                foreach (String item in items)
+                {
+                    if (count == 0)
+                    {
+                        m_bReversed = bool.Parse(item);
+                    }
+                    else
+                    {
+                        m_stImageFileNames[count] = item;
+                    }
+                    count++;
+                }*/
+
+                m_bReversed = bool.Parse(text);
+
+                m_bDirty = false;
             }
             catch
             {
@@ -79,15 +120,20 @@ namespace DualBookScanV2
         {
             try
             {
-                String fileName = String.Format("{0}\\{1}.book", m_stWorkingFolder, m_stBookName);
-                String[] lines = { m_bReverse.ToString() };
-                System.IO.File.WriteAllLines(fileName, lines);
+                String[] lines = { m_bReversed == false ? "0" : "1" };
+                System.IO.File.WriteAllLines(m_stBookName, lines);
                 m_bDirty = false;
             }
             catch
             {
                 MessageBox.Show("Save Failed", "Warning");
             }
+        }
+
+        public void SaveAs(String stBookName)
+        {
+            m_stBookName = stBookName;
+            Save();
         }
     }
 }
