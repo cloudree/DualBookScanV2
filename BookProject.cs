@@ -10,10 +10,16 @@ namespace DualBookScanV2
 {
     class BookProject
     {
+        private String m_stWorkingFolderName;
         private String m_stBookName;
         private bool m_bReversed;
         private bool m_bDirty;
         private ArrayList m_stImageFileNames;
+
+        public String WorkingFolderName
+        {
+            get { return m_stWorkingFolderName; }
+        }
 
         public String BookName
         {
@@ -37,9 +43,10 @@ namespace DualBookScanV2
 
         public void Init()
         {
-            m_bDirty = false;
+            m_stWorkingFolderName = "";
             m_stBookName = "";
             m_bReversed = false;
+            m_bDirty = false;
             m_stImageFileNames = new ArrayList();
         }
         
@@ -64,8 +71,9 @@ namespace DualBookScanV2
             return true;
         }
 
-        public void New(String stBookName, bool bReversed)
-        {   
+        public void New(String stWorkingFolderName, String stBookName, bool bReversed)
+        {
+            m_stWorkingFolderName = stWorkingFolderName;
             m_stBookName = stBookName;
             m_bReversed = bReversed;
             m_bDirty = true;
@@ -74,17 +82,19 @@ namespace DualBookScanV2
 
         public void Close()
         {
+            m_stWorkingFolderName = "";
             m_stBookName = "";
             m_bReversed = false;
             m_bDirty = false;
         }
 
-        public void Load(String stBookName)
+        public void Load(String stWorkingFolderName, String stBookName)
         {
             try
             {
+                m_stWorkingFolderName = stWorkingFolderName;
                 m_stBookName = stBookName;
-                String text = System.IO.File.ReadAllText(stBookName);
+                String text = System.IO.File.ReadAllText(stWorkingFolderName + "\\" + stBookName);
 
                 /* text = "0\n"
                 "C:\\MSX\\Labels\\octo_label.png\n"
@@ -121,7 +131,7 @@ namespace DualBookScanV2
             try
             {
                 String[] lines = { m_bReversed == false ? "0" : "1" };
-                System.IO.File.WriteAllLines(m_stBookName, lines);
+                System.IO.File.WriteAllLines(m_stWorkingFolderName + "\\" + m_stBookName, lines);
                 m_bDirty = false;
             }
             catch
@@ -130,8 +140,9 @@ namespace DualBookScanV2
             }
         }
 
-        public void SaveAs(String stBookName)
+        public void SaveAs(String stWorkingFolderName, String stBookName)
         {
+            m_stWorkingFolderName = stWorkingFolderName;
             m_stBookName = stBookName;
             Save();
         }
