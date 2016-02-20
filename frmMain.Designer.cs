@@ -59,8 +59,6 @@
             this.txtLeftFPS = new System.Windows.Forms.Label();
             this.btnRightCameraSetup = new System.Windows.Forms.Button();
             this.btnLeftCameraSetup = new System.Windows.Forms.Button();
-            this.VideoSourcePlayerLeft = new AForge.Controls.VideoSourcePlayer();
-            this.VideoSourcePlayerRight = new AForge.Controls.VideoSourcePlayer();
             this.dlgSaveAsFile = new System.Windows.Forms.SaveFileDialog();
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.pbPreview = new System.Windows.Forms.PictureBox();
@@ -292,8 +290,6 @@
             this.grpScan.Controls.Add(this.txtLeftFPS);
             this.grpScan.Controls.Add(this.btnRightCameraSetup);
             this.grpScan.Controls.Add(this.btnLeftCameraSetup);
-            this.grpScan.Controls.Add(this.VideoSourcePlayerLeft);
-            this.grpScan.Controls.Add(this.VideoSourcePlayerRight);
             this.grpScan.Location = new System.Drawing.Point(12, 29);
             this.grpScan.Name = "grpScan";
             this.grpScan.Size = new System.Drawing.Size(442, 349);
@@ -339,32 +335,6 @@
             this.btnLeftCameraSetup.UseVisualStyleBackColor = true;
             this.btnLeftCameraSetup.Click += new System.EventHandler(this.btnLeftCameraSetup_Click);
             // 
-            // VideoSourcePlayerLeft
-            // 
-            this.VideoSourcePlayerLeft.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.VideoSourcePlayerLeft.ForeColor = System.Drawing.Color.White;
-            this.VideoSourcePlayerLeft.Location = new System.Drawing.Point(6, 49);
-            this.VideoSourcePlayerLeft.Name = "VideoSourcePlayerLeft";
-            this.VideoSourcePlayerLeft.Size = new System.Drawing.Size(100, 100);
-            this.VideoSourcePlayerLeft.TabIndex = 9;
-            this.VideoSourcePlayerLeft.VideoSource = null;
-            this.VideoSourcePlayerLeft.NewFrame += new AForge.Controls.VideoSourcePlayer.NewFrameHandler(this.VideoSourcePlayerLeft_NewFrame);
-            this.VideoSourcePlayerLeft.MouseClick += new System.Windows.Forms.MouseEventHandler(this.VideoSourcePlayerLeft_MouseClick);
-            this.VideoSourcePlayerLeft.MouseMove += new System.Windows.Forms.MouseEventHandler(this.VideoSourcePlayerLeft_MouseMove);
-            // 
-            // VideoSourcePlayerRight
-            // 
-            this.VideoSourcePlayerRight.BackColor = System.Drawing.SystemColors.ControlDark;
-            this.VideoSourcePlayerRight.ForeColor = System.Drawing.Color.White;
-            this.VideoSourcePlayerRight.Location = new System.Drawing.Point(224, 49);
-            this.VideoSourcePlayerRight.Name = "VideoSourcePlayerRight";
-            this.VideoSourcePlayerRight.Size = new System.Drawing.Size(100, 100);
-            this.VideoSourcePlayerRight.TabIndex = 10;
-            this.VideoSourcePlayerRight.VideoSource = null;
-            this.VideoSourcePlayerRight.NewFrame += new AForge.Controls.VideoSourcePlayer.NewFrameHandler(this.VideoSourcePlayerRight_NewFrame);
-            this.VideoSourcePlayerRight.MouseClick += new System.Windows.Forms.MouseEventHandler(this.VideoSourcePlayerRight_MouseClick);
-            this.VideoSourcePlayerRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.VideoSourcePlayerRight_MouseMove);
-            // 
             // timer
             // 
             this.timer.Interval = 500;
@@ -377,6 +347,7 @@
             this.pbPreview.Location = new System.Drawing.Point(460, 294);
             this.pbPreview.Name = "pbPreview";
             this.pbPreview.Size = new System.Drawing.Size(200, 84);
+            this.pbPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pbPreview.TabIndex = 10;
             this.pbPreview.TabStop = false;
             // 
@@ -475,8 +446,6 @@
         private System.Windows.Forms.ToolStripMenuItem menuOption;
         private System.Windows.Forms.ToolStripMenuItem menuSaveAs;
         private System.Windows.Forms.SaveFileDialog dlgSaveAsFile;
-        public AForge.Controls.VideoSourcePlayer VideoSourcePlayerLeft;
-        public AForge.Controls.VideoSourcePlayer VideoSourcePlayerRight;
         private System.Windows.Forms.Label txtRightFPS;
         private System.Windows.Forms.Label txtLeftFPS;
         private System.Windows.Forms.Timer timer;

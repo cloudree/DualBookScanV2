@@ -15,7 +15,6 @@ C:\Work\DualBookScanV2\bin\Debug\AForge.Video.xml
 C:\Work\DualBookScanV2\bin\Debug\AForge.Video.DirectShow.xml
 C:\Work\DualBookScanV2\bin\Debug\sharpPDF.xml
 C:\Work\DualBookScanV2\bin\Debug\AForge.Math.xml
-C:\Work\DualBookScanV2\obj\Debug\DualBookScan.csprojResolveAssemblyReference.cache
 C:\Work\DualBookScanV2\obj\Debug\DualBookScanV2.dlgAbout.resources
 C:\Work\DualBookScanV2\obj\Debug\DualBookScanV2.dlgCameraConfig.resources
 C:\Work\DualBookScanV2\obj\Debug\DualBookScanV2.dlgNew.resources
@@ -24,3 +23,4 @@ C:\Work\DualBookScanV2\obj\Debug\DualBookScan.Properties.Resources.resources
 C:\Work\DualBookScanV2\obj\Debug\DualBookScan.csproj.GenerateResource.Cache
 C:\Work\DualBookScanV2\obj\Debug\DualBookScan.exe
 C:\Work\DualBookScanV2\obj\Debug\DualBookScan.pdb
+C:\Work\DualBookScanV2\obj\Debug\DualBookScan.csprojResolveAssemblyReference.cache

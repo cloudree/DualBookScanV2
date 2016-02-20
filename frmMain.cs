@@ -20,24 +20,25 @@ namespace DualBookScanV2
     {
         private BookProject book;
 
-        // Components
-        private List<AForge.Controls.VideoSourcePlayer> videoPlayers = new List<AForge.Controls.VideoSourcePlayer>();
+        // Scan Viewer Controls
+        private List<DualBookScan.CScanViewer> scanViewers = new List<DualBookScan.CScanViewer>();
 
         // stop watch for measuring fps
         private Stopwatch stopWatch = null;
 
-        // where mouse is clicked;
-        enum MouseClicked
-        {
-            None = -1, 
-            Left = 0,       // left scan view
-            Right = 1       // right scan view
-        };
-        private MouseClicked clicked = MouseClicked.None;
-        
         public frmMain()
         {
             InitializeComponent();
+
+            scanViewers.Add(new DualBookScan.CScanViewer());
+            this.grpScan.Controls.Add(this.scanViewers[0]);
+            scanViewers[0].Rotate = RotateFlipType.Rotate90FlipNone;
+            scanViewers[0].MouseDown += new System.Windows.Forms.MouseEventHandler(this.ScanViewerLeft_MouseDown);
+            
+            scanViewers.Add(new DualBookScan.CScanViewer());
+            this.grpScan.Controls.Add(this.scanViewers[1]);
+            scanViewers[1].Rotate = RotateFlipType.Rotate90FlipXY;
+
             book = new BookProject();
         }
 
@@ -45,8 +46,8 @@ namespace DualBookScanV2
         {
             RefreshImageListPages();
             RefreshTitleBar();
-
-            clicked = MouseClicked.None;
+            RefreshMenuItems();
+            RefreshScanButtons();
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -58,19 +59,27 @@ namespace DualBookScanV2
         {
             RefreshSize();
         }
-
-        private new void SuspendLayout()
-        {
-            videoPlayers.Add(VideoSourcePlayerLeft);
-            videoPlayers.Add(VideoSourcePlayerRight);
-        }
-
+        
         // Basic modules =====================
         private void RefreshTitleBar()
         {
             this.Text = "DualBookScan : " + book.BookName;
         }
+        
+        private void RefreshMenuItems()
+        {
+            menuSave.Enabled = book.HasBook();
+            menuSaveAs.Enabled = book.HasBook();
+            menuClose.Enabled = book.HasBook();
+        }
 
+        private void RefreshScanButtons()
+        {
+            btnScanLeft.Enabled = (scanViewers[0].VideoSource != null);
+            btnScanRight.Enabled = (scanViewers[1].VideoSource != null);
+            btnScanBoth.Enabled = btnScanLeft.Enabled & btnScanRight.Enabled;
+        }
+        
         private void RefreshImageListPages()
         {
             int idx = 0;
@@ -83,6 +92,20 @@ namespace DualBookScanV2
                 listViewPages.Items.Add(new ListViewItem(item, idx));
                 idx++;
             }
+        }
+
+        public void RefreshScanViewRatio()
+        {
+            int margin = grpScan.Location.X;
+            float defaultRatio = 3 / 4.0f;
+
+            scanViewers[0].Height = grpScan.Size.Height - scanViewers[0].Top - margin * 3;
+            scanViewers[0].Width = (int)(scanViewers[0].Height * defaultRatio);
+            scanViewers[1].Height = grpScan.Size.Height - scanViewers[1].Top - margin * 3;
+            scanViewers[1].Width = (int)(scanViewers[1].Height * defaultRatio);
+
+            scanViewers[0].AdjustRatio();
+            scanViewers[1].AdjustRatio();
         }
 
         private void RefreshSize()
@@ -108,53 +131,40 @@ namespace DualBookScanV2
             int interBtn = txtLeftFPS.Location.X - btnLeftCameraSetup.Location.X;
             btnRightCameraSetup.Location = new Point(center, btnRightCameraSetup.Location.Y);
             txtRightFPS.Location = new Point(center + interBtn, txtRightFPS.Location.Y);
-            VideoSourcePlayerRight.Location = new Point(center, VideoSourcePlayerLeft.Location.Y);
 
-            // camera-related
-            float aspectRatio = 3 / 4.0f;
-            VideoSourcePlayerLeft.Height = grpScan.Size.Height - VideoSourcePlayerLeft.Location.Y - margin;
-            VideoSourcePlayerLeft.Width = (int)(VideoSourcePlayerLeft.Height * aspectRatio);
-            VideoSourcePlayerRight.Height = grpScan.Size.Height - VideoSourcePlayerRight.Location.Y - margin;
-            VideoSourcePlayerRight.Width = (int)(VideoSourcePlayerRight.Height * aspectRatio);
+            // scanViewers-related
+            scanViewers[0].Location = new Point(btnLeftCameraSetup.Left, btnLeftCameraSetup.Bottom + margin);
+            scanViewers[1].Location = new Point(center, btnRightCameraSetup.Bottom + margin);
+            RefreshScanViewRatio();
         }
 
         private void CameraSetup(int idx)
         {
             dlgCameraConfig dlg = new dlgCameraConfig();
-            dlg.videoPlayer = videoPlayers[idx];
+            dlg.videoPlayer = scanViewers[idx];
+            dlg.ParentWindow = this;
+
             DialogResult res = dlg.ShowDialog();
             if (res == DialogResult.OK)
             {
                 timer.Start();
             }
+            RefreshScanButtons();
+            RefreshScanViewRatio();
         }
 
         private void AllCameraStop()
         {
             timer.Stop();
-            VideoSourcePlayerLeft.SignalToStop();
-            VideoSourcePlayerLeft.WaitForStop();
-            VideoSourcePlayerRight.SignalToStop();
-            VideoSourcePlayerRight.WaitForStop();
+
+            scanViewers[0].Stop();
+            scanViewers[1].Stop();
         }
         
         private int getFrameCount(int idx)
         {
-            IVideoSource videoSource = videoPlayers[idx].VideoSource;
+            IVideoSource videoSource = scanViewers[idx].VideoSource;
             return (videoSource != null) ? videoSource.FramesReceived : 0;
-        }
-
-        private void viewerNewFrame(int idx, ref Bitmap image)
-        {
-            switch (idx)
-            {
-                case 0:
-                    image.RotateFlip(RotateFlipType.Rotate90FlipNone);
-                    break;
-                case 1:
-                    image.RotateFlip(RotateFlipType.Rotate90FlipXY);
-                    break;
-            }
         }
 
         private void timer_Tick(object sender, EventArgs e)
@@ -179,11 +189,11 @@ namespace DualBookScanV2
             }
         }
 
-        private Bitmap CropImage(Bitmap source, Rectangle rt)
+        private Bitmap CropImage(Bitmap source, Rectangle rtSrc, Rectangle rtDest)
         {
-            Bitmap bmp = new Bitmap(rt.Size.Width, rt.Size.Height);
+            Bitmap bmp = new Bitmap(rtDest.Size.Width, rtDest.Size.Height);
             Graphics g = Graphics.FromImage(bmp);
-            g.DrawImage(source, 0, 0, rt, GraphicsUnit.Pixel);
+            g.DrawImage(source, rtDest, rtSrc, GraphicsUnit.Pixel);
             return bmp;
         }
 
@@ -194,12 +204,15 @@ namespace DualBookScanV2
             return source;
         }
 
-        private void PreviewImage(int idx, Rectangle rt)
+        private void PreviewImage(int idx, Point pt)
         {
-            Bitmap bmp = videoPlayers[idx].GetCurrentVideoFrame();
+            Bitmap bmp = scanViewers[idx].GetCurrentVideoFrame();
             if (bmp != null)
             {
-                Bitmap cropped = CropImage(bmp, rt);
+                Point rpt = new Point(pt.X * bmp.Width / scanViewers[idx].Width, pt.Y * bmp.Height / scanViewers[idx].Height);
+                Rectangle rtSrc = new Rectangle(rpt, pbPreview.Size);
+                Rectangle rtDest = new Rectangle(0, 0, pbPreview.Width, pbPreview.Height);
+                Bitmap cropped = CropImage(bmp, rtSrc, rtDest);
                 Bitmap filtered = FilterImage(cropped);
                 pbPreview.Image = filtered;
             }
@@ -214,9 +227,9 @@ namespace DualBookScanV2
                 String fileName = String.Format("{0}\\{1,6:000000}.png", book.WorkingFolderName, nudNextPage.Value);
 
                 Rectangle rt = new Rectangle(0, 0, 100, 100);   // RectResize(rect[idx], ratios[idx]);
-
-                Bitmap bmp = videoPlayers[idx].GetCurrentVideoFrame();
-                Bitmap sub = CropImage(bmp, rt);
+                
+                Bitmap bmp = scanViewers[idx].GetCurrentVideoFrame();
+                Bitmap sub = CropImage(bmp, rt, rt);
                 sub.Save(fileName, ImageFormat.Png);
                 sub.Dispose();
                 bmp.Dispose();
@@ -242,10 +255,9 @@ namespace DualBookScanV2
             dlgNew dlg = new dlgNew();
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                string pathName = Path.GetDirectoryName(dlg.FileName);
-                string fileName = Path.GetFileName(dlg.FileName);
-                book.New(pathName, fileName, dlg.isReverse);
+                book.New(dlg.FolderName, dlg.BookName, dlg.isReverse);
                 RefreshTitleBar();
+                RefreshMenuItems();
             }
         }
 
@@ -260,22 +272,28 @@ namespace DualBookScanV2
                 string fileName = Path.GetFileName(dlgOpenFile.FileName);
                 book.Load(pathName, fileName);
                 RefreshTitleBar();
+                RefreshMenuItems();
             }
         }
 
         private void menuSaveBook_Click(object sender, EventArgs e)
         {
+            if (!book.HasBook())
+                return;
             book.Save();
         }
 
         private void menuSaveAsBook_Click(object sender, EventArgs e)
         {
-            if( dlgSaveAsFile.ShowDialog() == DialogResult.OK )
+            if (!book.HasBook())
+                return;
+            if ( dlgSaveAsFile.ShowDialog() == DialogResult.OK )
             {
                 string pathName = Path.GetDirectoryName(dlgSaveAsFile.FileName);
                 string fileName = Path.GetFileName(dlgSaveAsFile.FileName);
                 book.SaveAs(pathName, fileName);
                 RefreshTitleBar();
+                RefreshMenuItems();
             }
         }
 
@@ -286,6 +304,7 @@ namespace DualBookScanV2
 
             book.Close();
             RefreshTitleBar();
+            RefreshMenuItems();
         }
 
         private void menuExit_Click(object sender, EventArgs e)
@@ -333,62 +352,7 @@ namespace DualBookScanV2
             CameraSetup(1);
         }
 
-        // right video
-        private void VideoSourcePlayerRight_NewFrame(object sender, ref Bitmap image)
-        {
-            viewerNewFrame(1, ref image);
-        }
-        
-        private void VideoSourcePlayerRight_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (clicked == MouseClicked.None)
-            {
-                Rectangle rt = new Rectangle(e.Location, pbPreview.Size);
-                PreviewImage(1, rt);
-            }
-        }
-
-        private void VideoSourcePlayerRight_MouseClick(object sender, MouseEventArgs e)
-        {
-            switch (e.Button)
-            {
-                case MouseButtons.Left:
-                    clicked = MouseClicked.Right;       // lock preview position
-                    break;
-                case MouseButtons.Right:
-                    clicked = MouseClicked.None;        // release preview position
-                    break;
-            }
-        }
-
-        // left video
-        private void VideoSourcePlayerLeft_NewFrame(object sender, ref Bitmap image)
-        {
-            viewerNewFrame(0, ref image);
-        }
-
-        private void VideoSourcePlayerLeft_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (clicked == MouseClicked.None)
-            {
-                Rectangle rt = new Rectangle(e.Location, pbPreview.Size);
-                PreviewImage(0, rt);
-            }
-        }
-
-        private void VideoSourcePlayerLeft_MouseClick(object sender, MouseEventArgs e)
-        {
-            switch (e.Button)
-            {
-                case MouseButtons.Left:
-                    clicked = MouseClicked.Left;        // lock preview position
-                    break;
-                case MouseButtons.Right:
-                    clicked = MouseClicked.None;        // release preview position
-                    break;
-            }
-        }
-
+        // scan buttons
         private void btnScanLeft_Click(object sender, EventArgs e)
         {
             Scan(0);
@@ -403,6 +367,12 @@ namespace DualBookScanV2
         {
             Scan(0);
             Scan(1);
+        }
+        
+        // scanViewe external Handlers
+        private void ScanViewerLeft_MouseDown(object sender, MouseEventArgs e)
+        {
+            PreviewImage(0, e.Location);
         }
     }
 }

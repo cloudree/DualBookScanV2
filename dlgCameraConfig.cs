@@ -19,6 +19,7 @@ namespace DualBookScanV2
         private FilterInfoCollection videoDevices;
         private VideoCapabilities[] videoCaps;
         public VideoSourcePlayer videoPlayer;
+        public frmMain ParentWindow;
 
         public dlgCameraConfig()
         {
@@ -49,6 +50,8 @@ namespace DualBookScanV2
         {
             CameraStop();
             CameraStart();
+            
+            //ParentWindow.RefreshScanViewRatio();
         }
         
         private void btnOK_Click(object sender, EventArgs e)

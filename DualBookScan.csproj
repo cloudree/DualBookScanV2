@@ -70,6 +70,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BookProject.cs" />
+    <Compile Include="CScanViewer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CScanViewer.Designer.cs">
+      <DependentUpon>CScanViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="dlgAbout.cs">
       <SubType>Form</SubType>
     </Compile>

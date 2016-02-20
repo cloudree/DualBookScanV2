@@ -49,7 +49,20 @@ namespace DualBookScanV2
             m_bDirty = false;
             m_stImageFileNames = new ArrayList();
         }
+
+        public void Close()
+        {
+            m_stWorkingFolderName = "";
+            m_stBookName = "";
+            m_bReversed = false;
+            m_bDirty = false;
+        }
         
+        public bool HasBook()
+        {
+            return (m_stWorkingFolderName != "" && m_stBookName != "");
+        }
+
         public bool QuerySave()
         {
             if (m_bDirty)
@@ -78,14 +91,6 @@ namespace DualBookScanV2
             m_bReversed = bReversed;
             m_bDirty = true;
             m_stImageFileNames = new ArrayList();
-        }
-
-        public void Close()
-        {
-            m_stWorkingFolderName = "";
-            m_stBookName = "";
-            m_bReversed = false;
-            m_bDirty = false;
         }
 
         public void Load(String stWorkingFolderName, String stBookName)
